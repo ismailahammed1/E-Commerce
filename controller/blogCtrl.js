@@ -17,7 +17,7 @@ const createBlog = asyncHandler(async (req, res) => {
 // updateBlog
 const updateBlog = asyncHandler(async (req, res) => {
   const id = req.params.id; // Extract the id from request parameters
-
+  validateMongoDbId(id)
   try {
     const newupdateBlog = await Blog.findByIdAndUpdate(id, req.body, {
       new: true,
@@ -32,38 +32,55 @@ const updateBlog = asyncHandler(async (req, res) => {
 });
 // get a blog
 const getBlog = asyncHandler(async (req, res) => {
-    const id = req.params.id; // Extract the id from request parameters
-  
-    try {
-      const blog = await Blog.findById(id);
-      if (!blog) {
-        return res.status(404).json({ message: "Blog not found" });
+  const id = req.params.id; // Extract the id from request parameters
+  validateMongoDbId(id)
+  try {
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      id,
+      { $inc: { numViews: 1 } },
+      {
+        new: true,
       }
-      const updatedBlog = await Blog.findByIdAndUpdate(
-        id,
-        { $inc: { numViews: 1 } },
-        {
-          new: true,
-        }
-      );
-      res.json({
-        blog: updatedBlog,
-      });
-    } catch (error) {
-      throw new Error(error);
-    }
-  });
+    );
+    res.json({
+      blog: updatedBlog,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 
-  ///?get all Blog
+///?get all Blog
 const getAllBlog = asyncHandler(async (req, res) => {
-    try {
-      const getAllBlog = await Blog.find();
-      res.json({
-        getAllBlog
-      });
-    } catch (error) {
-      throw new Error(error);
-    }
-  });
+  try {
+    const getAllBlog = await Blog.find();
+    res.json({
+      getAllBlog,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
 
-module.exports = { createBlog, updateBlog,getBlog,getAllBlog };
+///?delete a Blog
+const deleteBlog = asyncHandler(async (req, res) => {
+  const id = req.params.id; // Extract the id parameter from req.params
+  validateMongoDbId(id)
+  try {
+    const deletedBlog = await Blog.findByIdAndDelete(id);
+    if (!deletedBlog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+    res.json({
+      deletedBlog,
+    });
+  } catch (error) {
+    throw new Error(error);
+  }
+});
+
+module.exports = { createBlog, updateBlog, getBlog, getAllBlog, deleteBlog };
