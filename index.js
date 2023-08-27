@@ -5,7 +5,8 @@ const dotenv=require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 const authRouter=require('./routes/AuthRoutes');       
-const productRouter=require('./routes/ProductRoutes');       
+const productRouter=require('./routes/ProductRoutes');                          
+const blogRouter=require('./routes/BlogRoutes');              
 const bodyParser = require('body-parser');
 const dbConnect = require('./config/dbConnect');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
@@ -19,8 +20,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(cookieParser())
 app.use("/api/user", authRouter)
-app.use("/api/product", productRouter)
-//middlewaers part
+app.use("/api/product", productRouter);
+app.use("/api/blog",blogRouter)
+
 app.use(notFound)
 app.use(errorHandler)
 
