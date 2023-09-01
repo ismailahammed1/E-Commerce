@@ -27,14 +27,16 @@ var blogSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    like: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Set the reference model if applicable
-    },
-    dislike: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Set the reference model if applicable
-    },
+    likes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Set the reference model if applicable
+      }],
+      dislikes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // Set the reference model if applicable
+      }],
+      
+      
     image: {
       type: mongoose.Schema.Types.String, // Change the type to String
       default: 'https://www.pexels.com/photo/black-smartphone-surrounded-with-plants-3707744/',
