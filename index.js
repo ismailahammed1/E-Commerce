@@ -8,6 +8,8 @@ const authRouter=require('./routes/AuthRoutes');
 const productRouter=require('./routes/ProductRoutes');                          
 const blogRouter=require('./routes/BlogRoutes');              
 const ProductCategoryRoutes=require('./routes/ProductCategoryRoutes');              
+const BlogCategoryRoute=require('./routes/BlogCategoryRoutes');              
+const BrandRoutes=require('./routes/BrandRoutes');              
 const bodyParser = require('body-parser');
 const dbConnect = require('./config/dbConnect');
 const { errorHandler, notFound } = require('./middlewares/errorHandler');
@@ -24,6 +26,8 @@ app.use("/api/user", authRouter)
 app.use("/api/product", productRouter);
 app.use("/api/blog",blogRouter) 
 app.use("/api/category",ProductCategoryRoutes)
+app.use("/api/Blogcategory",BlogCategoryRoute)
+app.use("/api/Brandcategory",BrandRoutes)
 
 app.use(notFound)
 app.use(errorHandler)
