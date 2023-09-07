@@ -1,8 +1,10 @@
 const { query } = require("express");
+const User = require('../models/UserModels');
 const Product = require("../models/ProductModel");
 const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const { json } = require("body-parser");
+const mongoose = require('mongoose');
 
 const createProduct = asyncHandler(async (req, res) => {
   try {
@@ -103,10 +105,42 @@ const deleteOneProduct = asyncHandler(async (req, res) => {
   }
 });
 
+const addToWishList = asyncHandler(async (req, res) => {
+  try {
+    const { _id } = req.user; 
+    // Access the prodId from the request body
+    const { prodId } = req.body;
+    const user = await User.findById(_id); // Make sure to use the correct model name 'User'
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const alreadyAdded = user.wishlist.includes(prodId); // Check if prodId is already in the wishlist
+
+    if (alreadyAdded) {
+      // If prodId is already in the wishlist, remove it
+      user.wishlist = user.wishlist.filter(id => id.toString() !== prodId);
+    } else {
+      // If prodId is not in the wishlist, add it
+      user.wishlist.push(prodId);
+    }
+
+    // Save the updated user
+    await user.save();
+
+    // Return the updated wishlist
+    res.json(user);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
 module.exports = {
   createProduct,
   getAllProduct,
   getaProduct,
   updateOneProduct,
   deleteOneProduct,
+  addToWishList,
 };
