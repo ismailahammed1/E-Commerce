@@ -9,15 +9,23 @@ const mongoose = require("mongoose");
 
 const createProduct = asyncHandler(async (req, res) => {
   try {
+    // Check if a title is provided in the request body
     if (req.body.title) {
+      // If a title exists, generate a "slug" from it using the slugify function
       req.body.slug = slugify(req.body.title);
     }
-    const product = await Product.create(req.body); // Use 'Product' instead of 'product'
+
+    // create a new product using the data in the request body
+    const product = await Product.create(req.body);
+
+    // Send the created product as a JSON response
     res.json(product);
   } catch (error) {
+    // If an error occurs during the try block
     throw new Error(error);
   }
 });
+
 const getAllProduct = asyncHandler(async (req, res) => {
   try {
     // Filtering
