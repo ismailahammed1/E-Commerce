@@ -22,6 +22,7 @@ const getALLCoupon = asyncHandler(async (req, res) => {
 const getACoupon = asyncHandler(async (req, res) => {
     try {
       const {id}=req.params
+      validateMongoDbId(id)
       const findACoupon = await Coupon.findById(id);
       res.status(201).json(findACoupon);
     } catch (error) {
@@ -31,6 +32,7 @@ const getACoupon = asyncHandler(async (req, res) => {
 const updateCoupon = asyncHandler(async (req, res) => {
     try {
       const {id}=req.params
+      validateMongoDbId(id)
       const updateCoupon = await Coupon.findByIdAndUpdate(id, req.body, {new:true});
       res.status(201).json(updateCoupon);
     } catch (error) {
@@ -40,6 +42,7 @@ const updateCoupon = asyncHandler(async (req, res) => {
 const deleteCoupon = asyncHandler(async (req, res) => {
     try {
       const {id}=req.params
+      validateMongoDbId(id)
       const deleteCoupon = await Coupon.findByIdAndDelete(id);
       res.status(201).json(deleteCoupon);
     } catch (error) {
