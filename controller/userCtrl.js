@@ -232,29 +232,45 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
 
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token } = req.params; // Get the ID (token) from the URL parameter
-  const { password } = req.body; // Get the new password from the request body
-  // Hash the token and find the user
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  console.log("Hashed Token:", hashedToken);
-  console.log("Current Time:", Date.now());
-  
-  const userResetPassword = await user.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
-  });
-  console.log("Query Result:", userResetPassword);
-  
-    if (!userResetPassword) throw new Error('Token Expired, Please try again later')
-    userResetPassword.password = password;
-    userResetPassword.passwordResetToken = undefined;
-    userResetPassword.passwordResetExpires = undefined;
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const userResetPassword = await user.findOneAndUpdate(
+      {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: { $gt: Date.now() },
+      },
+      {
+        password,
+        passwordResetToken: undefined,
+        passwordResetExpires: undefined,
+      },
+      { new: true }
+    );
+
+    if (!userResetPassword) {
+      throw new Error('Token Expired, Please try again later');
+    }
+
+    // Generate a new password reset token and set the expiration date
+    const newResetToken = crypto.randomBytes(20).toString('hex');
+    const resetExpires = Date.now() + 3600000; // Token expires in 1 hour
+
+    userResetPassword.passwordResetToken = crypto
+      .createHash("sha256")
+      .update(newResetToken)
+      .digest("hex");
+    userResetPassword.passwordResetExpires = resetExpires;
 
     await userResetPassword.save();
-    res.json(userResetPassword);
-  
-});
 
+    res.json(userResetPassword);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
 
 
 

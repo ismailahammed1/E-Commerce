@@ -1,10 +1,11 @@
 const { query } = require("express");
-const User = require('../models/UserModels');
+const User = require("../models/UserModels");
 const Product = require("../models/ProductModel");
 const asyncHandler = require("express-async-handler");
 const slugify = require("slugify");
 const { json } = require("body-parser");
-const mongoose = require('mongoose');
+const validateMongoDbId = require("../utils/validateMongoDbId");
+const mongoose = require("mongoose");
 
 const createProduct = asyncHandler(async (req, res) => {
   try {
@@ -35,7 +36,6 @@ const getAllProduct = asyncHandler(async (req, res) => {
       const sortBy = req.query.sort.split(",").join(" "); // Separate by space
       console.log("sortBy:", sortBy); // Debugging
       query = query.sort(sortBy);
-      
     } else {
       query = query.sort("-createdAt");
     }
@@ -44,7 +44,6 @@ const getAllProduct = asyncHandler(async (req, res) => {
       query = query.select(fields);
     } else {
       query = query.select("-__v");
-
     }
     const page = parseInt(req.query.page, 10) || 1;
     const limit = parseInt(req.query.limit, 10) || 10;
@@ -65,6 +64,7 @@ const getAllProduct = asyncHandler(async (req, res) => {
 
 const getaProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  validateMongoDbId(id)
   console.log("Fetching product with ID:", id);
   try {
     const findProduct = await Product.findById(id);
@@ -77,7 +77,7 @@ const getaProduct = asyncHandler(async (req, res) => {
 });
 const updateOneProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log(id);
+  validateMongoDbId(id)
   try {
     if (req.body.title) {
       req.body.slug = slugify(req.body.title);
@@ -93,7 +93,7 @@ const updateOneProduct = asyncHandler(async (req, res) => {
 });
 const deleteOneProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  console.log(id);
+  validateMongoDbId(id)
   try {
     const deleteProduct = await Product.findByIdAndDelete(id, req.body, {
       new: true,
@@ -107,19 +107,19 @@ const deleteOneProduct = asyncHandler(async (req, res) => {
 
 const addToWishList = asyncHandler(async (req, res) => {
   try {
-    const { _id } = req.user; 
+    const { _id } = req.user;
     // Access the prodId from the request body
     const { prodId } = req.body;
     const user = await User.findById(_id); // Make sure to use the correct model name 'User'
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
-    
+
     const alreadyAdded = user.wishlist.includes(prodId); // Check if prodId is already in the wishlist
 
     if (alreadyAdded) {
       // If prodId is already in the wishlist, remove it
-      user.wishlist = user.wishlist.filter(id => id.toString() !== prodId);
+      user.wishlist = user.wishlist.filter((id) => id.toString() !== prodId);
     } else {
       // If prodId is not in the wishlist, add it
       user.wishlist.push(prodId);
@@ -131,11 +131,84 @@ const addToWishList = asyncHandler(async (req, res) => {
     // Return the updated wishlist
     res.json(user);
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: 'An error occurred' });
+    console.error("Error:", error);
+    res.status(500).json({ error: "An error occurred" });
   }
 });
 
+const rateProduct = asyncHandler(async (req, res) => {
+  try {
+    const { _id } = req.user; // Get the user's ID from the request's user object
+
+    // Access the prodId, star rating, and comment from the request body
+    const { prodId, star, comment } = req.body;
+
+    // Find the product by its ID
+    const product = await Product.findById(prodId); 
+
+    // Check if the user has already rated this product
+    let alreadyRated = product.rating.find(
+      (userId) => userId.postedby.toString() === _id.toString()
+    );
+
+    if (alreadyRated) {
+      // If the user has already rated this product, update the rating
+      const updatedRating = await Product.updateOne(
+        {
+          rating: { $elemMatch: alreadyRated }, // Find the specific rating by the user
+        },
+        {
+          $set: { "rating.$.star": star, "rating.$.comment": comment }, // Update the star rating and comment
+        },
+        { new: true } // Get the updated document
+      );
+    } else {
+      // If the user has not rated this product before, add a new rating
+      await Product.findByIdAndUpdate(
+        prodId,
+        {
+          $push: {
+            rating: {
+              star: star,        // The star rating given by the user
+              comment: comment,  // The comment provided by the user
+              postedby: _id,     // The user who posted the rating
+            },
+          },
+        },
+        { new: true } // Get the updated document
+      );
+    }
+
+    // Fetch all ratings for the product again
+    const getAllRatings = await Product.findById(prodId);
+
+    // Calculate the total number of ratings and their sum to determine the average
+    let totalRating = getAllRatings.rating.length;
+    let ratingSum = getAllRatings.rating
+      .map((item) => item.star)
+      .reduce((prev, curr) => prev + curr, 0);
+
+    // Calculate the actual average rating
+    let actualRating = Math.round(ratingSum / totalRating);
+
+    // Update the product with the new average rating
+    let finalProduct = await Product.findByIdAndUpdate(
+      prodId,
+      {
+        totalrating: actualRating, // Update the totalrating field with the new average
+      },
+      { new: true } // Get the updated product document
+    );
+
+    // Send the updated product as a JSON response
+    res.json(finalProduct);
+  } catch (error) {
+    throw new Error(error); // Handle any errors that occur during this process
+  }
+});
+
+
+// Exports all My product funtionnality for use productRoutes js
 module.exports = {
   createProduct,
   getAllProduct,
@@ -143,4 +216,5 @@ module.exports = {
   updateOneProduct,
   deleteOneProduct,
   addToWishList,
+  rateProduct,
 };
