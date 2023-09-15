@@ -16,5 +16,4 @@ router.delete('/:id',authMiddleware,isAdmin,deleteOneProduct);
 router.get('/', getAllProduct);
 
 
-  
-  module.exports = router;
+module.exports = router;
