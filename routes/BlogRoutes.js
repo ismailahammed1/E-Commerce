@@ -6,6 +6,11 @@ const { authMiddleware, isAdmin } = require('../middlewares/autMiddlewares');
 const router = express.Router();
 
 router.post('/', authMiddleware, isAdmin, createBlog);
+router.put(
+    '/upload/:id',
+    authMiddleware, 
+    isAdmin,uploadPhoto.array('images', 10), productImgResize,uploadImages
+  );
 router.put('/:id', authMiddleware, isAdmin, updateBlog);
 router.get('/:id', getBlog);
 router.get('/', getAllBlog); 

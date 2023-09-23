@@ -1,37 +1,52 @@
-const couldinary= require('cloudinary');
-couldinary.config({
-    cloud_name:process.env.api.CLOUD_NAME,
-    api_key:process.env.API_KEY,
-    api_secret:process.env.SECRET_KEY,
-})
-const cloudinaryUploading=async(fileUploads)=>{
-    return new promise((resolve)=>{
-        couldinary.uplodser.upload(fileUploads,(result)=>{
-            resolve({
-                url:result.secure_url,
-                asset_id:result.secure_asset_id,
-                public_id:result.secure_public_id,
-            },
-            {
-                resource_type:'auto',
-            }
-            );
+const cloudinary = require("cloudinary").v2;
+require("dotenv").config();
+
+cloudinary.config({
+  cloud_name: "dfn1s2ysa",
+  api_key: "614615446951297",
+  api_secret: "V5qS2_pyAomgxQlwdEcWDsQ4p8w",
+});
+
+const cloudinaryUploading = (fileUploads) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload(fileUploads, (error, result) => {
+      if (error) {
+        // Handle the Cloudinary upload error
+        reject(error);
+      } else if (result && result.secure_url) {
+        // Upload succeeded, resolve with the secure URL
+        resolve({
+          url: result.secure_url,
         });
+      } else {
+        // Handle the case where the response is unexpected
+        reject(new Error("Cloudinary upload response is invalid"));
+      }
     });
+  });
 };
-const cloudinaryDeleteImg=async(fileDelete)=>{
-    return new promise((resolve)=>{
-        couldinary.uplodser.destroy(fileDelete,(result)=>{
-            resolve({
-                url:result.secure_url,
-                asset_id:result.secure_asset_id,
-                public_id:result.secure_public_id,
-            },
-            {
-                resource_type:'auto',
-            }
-            );
-        });
+
+const cloudinaryDeleteImg = async (fileDelete) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.destroy(fileDelete, (error, result) => {
+      if (error) {
+        reject(error); // Handle the error and reject the promise
+      } else if (result && result.secure_url) {
+        resolve(
+          {
+            url: result.secure_url,
+            asset_id: result.asset_id,
+            public_id: result.public_id,
+          },
+          {
+            resource_type: "auto",
+          }
+        );
+      } else {
+        reject(new Error("Cloudinary delete response is invalid")); // Handle invalid response
+      }
     });
+  });
 };
-module.exports={cloudinaryDeleteImg,cloudinaryUploading}
+
+module.exports = { cloudinaryUploading, cloudinaryDeleteImg };

@@ -6,6 +6,9 @@ const slugify = require("slugify");
 const { json } = require("body-parser");
 const validateMongoDbId = require("../utils/validateMongoDbId");
 const mongoose = require("mongoose");
+const { cloudinaryUploading } = require("../utils/cloudinary");
+const fs = require("fs");
+
 
 const createProduct = asyncHandler(async (req, res) => {
   try {
@@ -215,6 +218,43 @@ const rateProduct = asyncHandler(async (req, res) => {
   }
 });
 
+const uploadImages = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  validateMongoDbId(id);
+
+  try {
+    const uploader = (path) => cloudinaryUploading(path, 'images');
+    const urls = [];
+    const files = req.files;
+    for (const file of files) {
+      const { path } = file;
+      const newpath = await uploader(path);
+      console.log(newpath);
+      urls.push(newpath);
+      fs.unlinkSync(path)
+    }
+
+    // Use await to wait for the Product.findByIdAndUpdate query to complete
+    const findproduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        images: urls.map((file) => {
+          return file;
+        }),
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.json(findproduct); // Respond with the updated product object
+  } catch (error) {
+    console.error("Error uploading images:", error); // Log the specific error
+    res.status(500).json({ error: "An error occurred while uploading images", details: error.message });
+  }
+});
+
+
 
 // Exports all My product funtionnality for use productRoutes js
 module.exports = {
@@ -225,4 +265,5 @@ module.exports = {
   deleteOneProduct,
   addToWishList,
   rateProduct,
+  uploadImages
 };

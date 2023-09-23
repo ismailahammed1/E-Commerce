@@ -37,10 +37,7 @@ var blogSchema = new mongoose.Schema(
       }],
       
       
-    image: {
-      type: mongoose.Schema.Types.String, // Change the type to String
-      default: 'https://www.pexels.com/photo/black-smartphone-surrounded-with-plants-3707744/',
-    },
+    image: [],
     author: {
       type: String,
       default: 'Admin',
