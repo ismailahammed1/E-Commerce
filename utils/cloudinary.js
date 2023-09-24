@@ -11,20 +11,20 @@ const cloudinaryUploading = (fileUploads) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload(fileUploads, (error, result) => {
       if (error) {
-        // Handle the Cloudinary upload error
+        console.error('Cloudinary upload error:', error);
         reject(error);
       } else if (result && result.secure_url) {
-        // Upload succeeded, resolve with the secure URL
         resolve({
           url: result.secure_url,
         });
       } else {
-        // Handle the case where the response is unexpected
-        reject(new Error("Cloudinary upload response is invalid"));
+        console.error('Invalid Cloudinary upload response:', result);
+        reject(new Error('Cloudinary upload response is invalid'));
       }
     });
   });
 };
+
 
 const cloudinaryDeleteImg = async (fileDelete) => {
   return new Promise((resolve, reject) => {

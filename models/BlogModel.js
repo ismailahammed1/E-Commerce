@@ -35,9 +35,9 @@ var blogSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User', // Set the reference model if applicable
       }],
-      
-      
-    image: [],
+      images: [{
+        type: mongoose.Schema.Types.String, // Change the type to String
+      }],      
     author: {
       type: String,
       default: 'Admin',

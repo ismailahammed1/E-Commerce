@@ -57,17 +57,12 @@ const blogImgResize = async (req, res, next) => {
   await Promise.all(
     req.files.map(async (file) => {
       const productImagePath = `public/images/blogs/${file.filename}`;
-      sharp(file.path)
+        await sharp(file.path)
         .resize(300, 300)
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
         .toFile(productImagePath);
-
-        if (fs.existsSync(productImagePath)) {
-          fs.unlinkSync(productImagePath);
-        } else {
-          console.error(`File does not exist: ${productImagePath}`);
-        }
+        fs.unlinkSync(productImagePath);       
     })
   );
   next();
